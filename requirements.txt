@@ -1,0 +1,10 @@
+customtkinter
+requests
+Pillow
+colorama
+qrcode
+psutil
+phonenumbers
+Faker
+pynput
+Flask
