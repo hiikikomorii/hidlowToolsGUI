@@ -1,15 +1,34 @@
-from colorama import init, Fore, Style
-import psutil, socket, platform
-import os
-from datetime import date, datetime
-import requests
+
+try:
+    import sys
+    from colorama import init, Fore, Style
+    import psutil, socket, platform
+    import os, subprocess
+    from datetime import date, datetime
+    import requests
+    from colorama import init, Fore, Style
+    from phonenumbers import carrier, geocoder, timezone, parse, is_valid_number
+    import phonenumbers
+    import requests
+    import json, urllib.request
+    import sys
+    import random
+    import qrcode
+    import re
+    import time
+    from pingapi_func import try_ping_number, send_request_ping, try_ping_ll, try_ping_btc, try_ping_ton, try_ping_ip, check_internet
+    import threading
+except ModuleNotFoundError as e:
+    print(f"Модуль {e.name} не найден.\nУстановите {e.name}")
+
+init(autoreset=False)
+
+_orig_white = Fore.WHITE
+_orig_white_ex = Fore.LIGHTWHITE_EX
 
 
-init(autoreset=True)
-
-
-def help_debug_cmd():
-    print(f"""
+def help_cmd():
+    print(f"""{Fore.LIGHTWHITE_EX}
 clear
 info
 myip
@@ -18,10 +37,8 @@ time
 exit
 reboot
 fgblue
+fgcyan
 fgred
-fgyellow
-fggreen
-fgpurple
 fgwhite
 ping number
 ping ip
@@ -29,17 +46,17 @@ ping latlon
 ping btc
 ping ton
 
-{Style.BRIGHT}подробный список команд: [GUI] -> info -> about console
+{Style.BRIGHT}подробное описание команд: [GUI] -> info -> about console
 """)
+
 
 def clear_cmd():
     os.system("cls")
-    print(f"{Fore.LIGHTCYAN_EX}{Style.BRIGHT}Канал с обновлениями - https://t.me/+wF7Os8GIEBlkZmNi")
-    print(f"{Fore.LIGHTCYAN_EX}{Style.BRIGHT}creator: https://t.me/Hidlow")
+
 
 def exit_cmd():
     print(Fore.RED + "Выход...")
-    exit()
+    sys.exit()
 
 def info_cmd():
     sys1 = platform.node()
@@ -54,27 +71,41 @@ def info_cmd():
     syspy2 = platform.python_build()
     syspy3 = platform.python_compiler()
 
-    print(f"Name:{Style.BRIGHT} {sys1}")
-    print(f"OS:{Style.BRIGHT} {sys2}")
-    print(f"Machine:{Style.BRIGHT} {sys3}")
-    print(f"processor:{Style.BRIGHT} {sys4}")
-    print(f"CPU count:{Style.BRIGHT} {sys5}")
-    print(f"CPU usage:{Style.BRIGHT} {sys6}")
-    print(f"Memory:{Style.BRIGHT} {sys7}")
+    try:
+        print(f"{Fore.WHITE}Name:{Fore.LIGHTWHITE_EX}{Style.BRIGHT} {sys1}")
+        print(f"{Fore.WHITE}OS:{Fore.LIGHTWHITE_EX}{Style.BRIGHT} {sys2}")
+        print(f"{Fore.WHITE}Machine:{Fore.LIGHTWHITE_EX}{Style.BRIGHT} {sys3}")
+        print(f"{Fore.WHITE}processor:{Fore.LIGHTWHITE_EX}{Style.BRIGHT} {sys4}")
+        print(f"{Fore.WHITE}CPU count:{Fore.LIGHTWHITE_EX}{Style.BRIGHT} {sys5}")
+        print(f"{Fore.WHITE}CPU usage:{Fore.LIGHTWHITE_EX}{Style.BRIGHT} {sys6}")
+        print(f"{Fore.WHITE}Memory:{Fore.LIGHTWHITE_EX}{Style.BRIGHT} {sys7}")
 
-    print(f"Py Version:{Style.BRIGHT} {syspy1}")
-    print(f"Py Build:{Style.BRIGHT} {syspy2}")
-    print(f"Py Compiler:{Style.BRIGHT} {syspy3}")
+        print(f"{Fore.WHITE}Py Version:{Fore.LIGHTWHITE_EX}{Style.BRIGHT} {syspy1}")
+        print(f"{Fore.WHITE}Py Build:{Fore.LIGHTWHITE_EX}{Style.BRIGHT} {syspy2}")
+        print(f"{Fore.WHITE}Py Compiler:{Fore.LIGHTWHITE_EX}{Style.BRIGHT} {syspy3}")
+    except Exception as error_sysinfo:
+        print(f"{Fore.RED}error info about system\n{error_sysinfo}")
 
 
+def reboot_cmd():
+    try:
+        script_path = os.path.abspath(__file__)
+        subprocess.Popen(
+            ["cmd", "/k", sys.executable, str(script_path)],
+            creationflags=subprocess.CREATE_NEW_CONSOLE
+        )
+        time.sleep(2)
+        sys.exit()
+    except Exception as error_reboot:
+        print(f"{Fore.RED} Reboot error.\n{error_reboot}")
 
 def ipconfig_cmd():
 
     ipv4 = requests.get("https://api.ipify.org").text
     local_ip = socket.gethostbyname(socket.gethostname())
 
-    print(f"IPv4: {Style.BRIGHT}{ipv4}")
-    print(f"Local IP: {Style.BRIGHT}{local_ip}")
+    print(f"{Fore.WHITE}IPv4: {Fore.LIGHTWHITE_EX}{Style.BRIGHT}{ipv4}")
+    print(f"{Fore.WHITE}Local IP: {Fore.LIGHTWHITE_EX}{Style.BRIGHT}{local_ip}")
 
 
 def date_cmd():
@@ -82,30 +113,69 @@ def date_cmd():
     time1 = datetime.now().strftime("%H:%M:%S")
     data1 = date.today()
 
-    print(f"date: {Style.BRIGHT}{data1}", end=" | ")
-    print(f"time: {Style.BRIGHT}{time1}")
+    print(f"{Fore.WHITE}date: {Fore.LIGHTWHITE_EX}{Style.BRIGHT}{data1}", end=" | ")
+    print(f"{Fore.WHITE}time: {Fore.LIGHTWHITE_EX}{Style.BRIGHT}{time1}")
+
+def fgred_cmd():
+    Fore.WHITE = Fore.RED
+    Fore.LIGHTWHITE_EX = Fore.LIGHTRED_EX
 
 
+def fgwhite_cmd():
+    Fore.WHITE = _orig_white
+    Fore.LIGHTWHITE_EX = _orig_white_ex
+
+
+def fgblue_cmd():
+    Fore.WHITE = Fore.BLUE
+    Fore.LIGHTWHITE_EX = Fore.LIGHTBLUE_EX
+
+def fgcyan_cmd():
+    Fore.WHITE = Fore.CYAN
+    Fore.LIGHTWHITE_EX = Fore.LIGHTCYAN_EX
+
+
+def try_ping_number_cmd():
+    print(Fore.LIGHTWHITE_EX +
+    "wait..")
+    user_iput = "+79268471359"
+    phone = re.sub(r"\D", "", user_iput)
+
+    if check_internet():
+        a = try_ping_number(phone)
+        print(a)
+    else:
+        print(f"{Fore.RED}Отсутствует интернет-соединение!")
 
 def main():
-
     commands = {
         "clear": clear_cmd,
         "exit": exit_cmd,
-        "help": help_debug_cmd,
         "info": info_cmd,
         "myip": ipconfig_cmd,
+        "help": help_cmd,
         "time": date_cmd,
+        "reboot": reboot_cmd,
+        "fgblue": fgblue_cmd,
+        "fgcyan": fgcyan_cmd,
+        "fgred": fgred_cmd,
+        "fgwhite": fgwhite_cmd,
+        "ping number": try_ping_number_cmd,
+        "ping ip": try_ping_ip,
+        "ping latlon": try_ping_ll,
+        "ping btc": try_ping_btc,
+        "ping ton": try_ping_ton
     }
 
+
     while True:
-        cmd = input("> ").strip().lower()
+        cmd = input(Fore.WHITE + "> ").strip().lower()
         if not cmd:
             continue
         if cmd in commands:
             commands[cmd]()
         else:
-            print(f"{Fore.RED}неизвестная команда: {cmd}. Введите 'help' для списка команд.")
+            print(f"{Style.BRIGHT}{Fore.RED}неизвестная команда: {cmd}. Введите 'help' для списка команд.")
 
 if __name__ == '__main__':
     main()

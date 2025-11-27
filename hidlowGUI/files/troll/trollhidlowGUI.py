@@ -40,7 +40,7 @@ def trooll():
                     print(Fore.BLUE + " wait 3 sec")
                     time.sleep(3)
         elif troll_cmd == "2":
-            exit()
+            sys.exit()
 
         else:
             print(Fore.LIGHTCYAN_EX + "1 - start  2 - exit")
