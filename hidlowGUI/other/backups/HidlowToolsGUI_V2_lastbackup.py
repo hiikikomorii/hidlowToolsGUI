@@ -17,22 +17,18 @@ try:
     import sys
     import re
     import subprocess
-    from faker import Faker
-    import ctypes
-    from pynput.keyboard import Controller, Key
-    from flask import Flask, jsonify
-    from pathlib import Path
     import threading
+    import queue
+    from faker import Faker
 
 except ModuleNotFoundError as e:
-    root = None
     print(f"Модуль {e.name} не найден.\nУстановите {e.name}")
-    ctypes.windll.user32.MessageBoxW(0, f"установите модуль {e.name}", "HidlowToolsGUI", 0x10)
-    sys.exit()
+
 
 root = ctk.CTk()
 init(autoreset=True)
-fullscreen = False
+cmd_queue = queue.Queue()
+stop_flag = False
 screen_width = root.winfo_screenwidth()
 screen_height = root.winfo_screenheight()
 time1 = datetime.now().strftime("%H:%M:%S")
@@ -44,16 +40,11 @@ _orig_lightblue_ex = Fore.LIGHTBLUE_EX
 _orig_cyan = Fore.CYAN
 _orig_lightcyan_ex = Fore.LIGHTCYAN_EX
 
-print(f"{Style.BRIGHT}{Fore.BLUE}GitHub: https://github.com/hiikikomorii")
+
+print(f"{Fore.LIGHTCYAN_EX}{Style.BRIGHT}Канал с обновлениями - https://t.me/+wF7Os8GIEBlkZmNi")
+print(f"{Fore.LIGHTCYAN_EX}{Style.BRIGHT}dev: https://t.me/Hidlow")
 
 print(f"{Fore.BLUE}{Style.BRIGHT}[SYSTEM]{Style.NORMAL} {Fore.LIGHTCYAN_EX}Дата & время запуска: {Style.BRIGHT}{data1}, {time1}")
-
-check_path_debug = Path(r"files\consoledebug\debugconsole.py")
-if check_path_debug.exists():
-    print(f"{Fore.BLUE}{Style.BRIGHT}[SYSTEM]{Style.NORMAL} {Fore.LIGHTGREEN_EX}CMD is available")
-else:
-    print(f"{Fore.BLUE}{Style.BRIGHT}[SYSTEM] {Fore.RED}CMD is not available\n" * 10)
-
 
 
 # настройка gui
@@ -79,8 +70,6 @@ def select_qrcode():
 def select_gptchc():
     prepare_input(gptchc)
 
-def select_notify():
-    prepare_input(main_notify)
 
 def select_about():
     prepare_about()
@@ -225,9 +214,7 @@ def api_number():
 
     except Exception as er:
         output_label.configure(text=f"Ошибка API: {er}", text_color="red")
-        output_label.pack()
         print(f"{Fore.BLUE}{Style.BRIGHT}[NUMBER]{Style.NORMAL} {Fore.LIGHTRED_EX}Ошибка API: {er}")
-        button1.configure(text_color="#FF0000")
 
 
 
@@ -246,7 +233,7 @@ def api_ip():
         copyable = tk.Text(
             entry_frame,
             width=60,
-            height=23,
+            height=20,
             bg="black",
             fg="white",
             font=("Arial", 14),
@@ -260,9 +247,6 @@ def api_ip():
 
         text = (
             f"IP: {data.get('ip', 'не найдено')}\n"
-            f"Тип: {data.get('type', 'не найдено')}\n"
-            f"Долгота: {data.get('latitudee', 'не найдено')}\n"
-            f"Широта: {data.get('longitudee', 'не найдено')}\n"
             f"Континент: {data.get('continent', 'не найдено')}\n"
             f"Страна: {data.get('country', 'не найдено')}\n"
             f"Столица: {data.get('country_capital', 'не найдено')}\n"
@@ -271,17 +255,10 @@ def api_ip():
             f"Соседние страны: {data.get('country_neighbours', 'не найдено')}\n"
             f"Флаг: {data.get('country_flag', 'не найдено')}\n"
             f"Код телефона: {data.get('country_phone', 'не найдено')}\n"
-            f"Код континента: {data.get('continent_code', 'не найдено')}\n"
-            f"Код страны: {data.get('country_code', 'не найдено')}\n"
-            f"Код валюты: {data.get('currency_code', 'не найдено')}\n"
-            f"ASN: {data.get('asn', 'не найдено')}\n"
             f"Провайдер: {data.get('isp', 'не найдено')}\n" 
             f"Организация: {data.get('org', 'не найденo')}\n"           
-            f"Часовой пояс: {data.get('timezone', 'не найдено')}\n"
-            f"Название: {data.get('timezone_name', 'не найдено')}\n"
+            f"Часовой пояс: {data.get('timezone', 'не найдено')}\n"          
             f"Валюта: {data.get('currency', 'не найдено')}\n"
-            f"Символ валюты: {data.get('currency_symbol', 'не найдено')}\n"
-
         )
 
 
@@ -290,10 +267,8 @@ def api_ip():
         print(f"{Fore.BLUE}{Style.BRIGHT}[IP]{Style.NORMAL} {Fore.LIGHTGREEN_EX}Запрос выполнен: {user_input}")
 
     except Exception as er:
-        output_label.configure(text=f"Ошибка API-IP: {er}", text_color="red")
-        output_label.pack()
+        output_label.config(text=f"Ошибка API-IP: {er}", text_color="red")
         print(f"{Fore.BLUE}{Style.BRIGHT}[IP]{Style.NORMAL} {Fore.LIGHTRED_EX}Ошибка API-IP: {er}")
-        button2.configure(text_color="#FF0000")
 
 def api_lat():
     user_input = entry.get().strip()
@@ -310,7 +285,7 @@ def api_lat():
         parts = user_input.split()
 
         if len(parts) != 2:
-            output_label.configure(text="Введите два значения: широта и долгота через пробел", text_color="red")
+            output_label.config(text="Введите два значения: широта и долгота через пробел", text_color="red")
             output_label.pack(pady=5)
             print(f"{Fore.BLUE}{Style.BRIGHT}[LatLon]{Style.NORMAL} {Fore.LIGHTYELLOW_EX}Координаты были введены неправильно.")
             return
@@ -324,7 +299,7 @@ def api_lat():
         copyable = tk.Text(
             entry_frame,
             width=50,
-            height=20,
+            height=6,
             bg="black",
             fg="white",
             font=("Arial", 14),
@@ -338,22 +313,10 @@ def api_lat():
 
         text = (
             f"Страна: {data.get('address', {}).get('country', 'не найдено')}\n"
-            f"Регион: {data.get('address', {}).get('region', 'не найдено')}\n"
-            f"Область: {data.get('address', {}).get('state', 'не найдено')}\n"
+            f"Регион: {data.get('address', {}).get('state', 'не найдено')}\n"
             f"Город: {data.get('address', {}).get('city', data.get('address', {}).get('town', 'не найдено'))}\n"
-            f"Пригород: {data.get('address', {}).get('suburb', 'не найдено')}\n"           
-            f"Квартал: {data.get('address', {}).get('quarter', 'не найдено')}\n"
-            f"Улица: {data.get('address', {}).get('road', 'не найдено')}\n"
-            f"Микрорайон: {data.get('address', {}).get('neighbourhood', 'не найдено')}\n"
-            f"Достопримечательность: {data.get('address', {}).get('name', 'не найдено')}\n"
-            f"Номер дома: {data.get('address', {}).get('house_number', 'не найдено')}\n\n"
-            f"Код страны: {data.get('address', {}).get('country_code', 'не найдено')}\n"
-            f"ID места: {data.get('place_id', 'не найдено')}\n"
-            f"Тип объекта: {data.get('osm_type', 'не найдено')}\n"
-            f"Класс объекта: {data.get('class', 'не найдено')}\n"
-            f"Тип: {data.get('type', 'не найдено')}\n"
             f"Почтовый индекс: {data.get('address', {}).get('postcode', 'не найдено')}\n"
-
+            f"Полный адрес: {data.get('display_name', 'не найдено')}"
         )
 
         copyable.insert("1.0", text)
@@ -362,10 +325,8 @@ def api_lat():
         print(f"{Fore.BLUE}{Style.BRIGHT}[LatLon]{Style.NORMAL} {Fore.LIGHTGREEN_EX}Запрос был выполнен: {parts}")
 
     except Exception as er:
-        output_label.configure(text=f"Ошибка API-lat: {er}", text_color="red")
-        output_label.pack()
+        output_label.config(text=f"Ошибка API-lat: {er}", text_color="red")
         print(f"{Fore.BLUE}{Style.BRIGHT}[LatLon]{Style.NORMAL} {Fore.LIGHTRED_EX}Ошибка API-lat: {er}")
-        button3.configure(text_color="#FF0000")
 
 def qrcodee():
     user_input = entry.get().strip()
@@ -374,7 +335,7 @@ def qrcodee():
 
     output_label.pack_forget()
     if not user_input:
-        output_label.configure(text="Введите URL", text_color="red")
+        output_label.config(text="Введите URL", text_color="red")
         output_label.pack(pady=5)
         print(f"{Fore.BLUE}{Style.BRIGHT}[QR]{Style.NORMAL} {Fore.LIGHTYELLOW_EX}Url не был введен.")
         return
@@ -382,28 +343,21 @@ def qrcodee():
     try:
         img = qrcode.make(user_input)
         img.save("qrcode.png")
-        output_label.configure(text="QRcode сохранен", text_color="green")
+        output_label.config(text="QRcode сохранен", text_color="green")
         print(f"{Fore.BLUE}{Style.BRIGHT}[QR]{Style.NORMAL} {Fore.LIGHTGREEN_EX}QR код сгенерирован и сохранён как 'qrcodde.png'")
 
     except Exception as er:
-        output_label.configure(text="error. see log", text_color="red")
+        output_label.config(text="error. see log", text_color="red")
         output_label.pack(pady=5)
         print(f"{Fore.BLUE}{Style.BRIGHT}[QR]{Style.NORMAL} {Fore.LIGHTRED_EX}Ошибка функции qr: {er}")
-        button4.configure(text_color="#FF0000")
 
 def trol():
     try:
         print(f"{Fore.BLUE}{Style.BRIGHT}[TROLL]{Style.NORMAL} {Fore.LIGHTGREEN_EX}Troll was opened")
-        script_dir = Path(__file__).parent / "files" / "troll"
-        script_file = script_dir / "trollhidlowGUI.py"
-
-        subprocess.Popen(
-            ["cmd", "/k", sys.executable, str(script_file)],
-            cwd=str(script_dir),
-            creationflags=subprocess.CREATE_NEW_CONSOLE
-        )
+        path = r"files\troll\trollsetup.bat"
+        os.startfile(path)
     except Exception as error_troll:
-        button5.configure(text_color="#FF0000")
+        button5.config(text_color="#FF0000")
         print(f"{Fore.BLUE}{Style.BRIGHT}[TROLL]{Style.NORMAL} {Fore.RED}произошла ошибка при открытии 'troll'\n{error_troll}")
 
 
@@ -445,10 +399,8 @@ def select_ton():
         copyable.insert("1.0", text)
         copyable.bind("<Key>", lambda s: "break")
         copyable.configure(cursor="arrow")
-
-    except Exception as error_ton:
-        print(f"{Fore.BLUE}{Style.BRIGHT}[TON]{Style.NORMAL} {Fore.RED}TON ERROR\napi недоступно\n{error_ton}")
-        ton_button.configure(text_color="#FF0000")
+    except Exception:
+        print(f"{Fore.BLUE}{Style.BRIGHT}[TON]{Style.NORMAL} {Fore.RED}TON ERROR")
 
 def select_btc():
     try:
@@ -489,9 +441,8 @@ def select_btc():
         copyable.bind("<Key>", lambda s: "break")
         copyable.configure(cursor="arrow")
 
-    except Exception as error_btc:
-        print(f"{Fore.BLUE}{Style.BRIGHT}[BTC]{Style.NORMAL} {Fore.RED}BTC ERROR\napi недоступно\n{error_btc}")
-        btc_button.configure(text_color="#FF0000")
+    except Exception:
+        print(f"{Fore.BLUE}{Style.BRIGHT}[BTC]{Style.NORMAL} {Fore.RED}BTC ERROR")
 
 def extract_chat(input_path, chat_name, output_path):
     with open(input_path, "r", encoding="utf-8") as f:
@@ -549,8 +500,7 @@ def gptchc():
         extract_chat(input_file, chat_input_name, output_file)
 
     except Exception as er:
-        output_label.configure(text="error. see log", text_color="red")
-        output_label.pack()
+        output_label.config(text="error. see log", text_color="red")
         print(f"{Fore.BLUE}{Style.BRIGHT}[GPTCHC]{Style.NORMAL} {Fore.LIGHTRED_EX}Ошибка функции GPTCHC: {er}")
 
 
@@ -558,16 +508,10 @@ def gptchc():
 def hidlowapi_cmd():
     try:
         print(f"{Fore.BLUE}{Style.BRIGHT}[API Server]{Style.NORMAL} {Fore.LIGHTGREEN_EX}Server was enabled")
-        script_dir = Path(__file__).parent / "files" / "apiserver"
-        script_file = script_dir / "hidlowAPI.py"
-
-        subprocess.Popen(
-            ["cmd", "/k", sys.executable, str(script_file)],
-            cwd=str(script_dir),
-            creationflags=subprocess.CREATE_NEW_CONSOLE
-        )
+        path = r"files\apiserver\setupserver.bat"
+        os.startfile(path)
     except Exception as error_hidlowapi:
-        button9.configure(text_color="#FF0000")
+        button9.config(text_color="#FF0000")
         print(f"{Fore.BLUE}{Style.BRIGHT}[API Server]{Style.NORMAL} {Fore.RED}произошла ошибка при запуске 'HidlowAPI'\n{error_hidlowapi}")
 
 #faker backend
@@ -712,7 +656,7 @@ def fakerjp():
         wrap="word"
     )
     copyable.pack(padx=20, pady=20)
-    print(f"{Fore.BLUE}{Style.BRIGHT}[FAKER: JP]{Style.NORMAL} {Fore.LIGHTGREEN_EX}fake information was shown")
+    print(f"{Fore.BLUE}{Style.BRIGHT}[FAKER: KZ]{Style.NORMAL} {Fore.LIGHTGREEN_EX}fake information was shown")
 
     fake = Faker('ja_JP')
 
@@ -740,61 +684,158 @@ def fakerjp():
     copyable.configure(cursor="arrow")
 
 
-def show_messagebox(text, title, icon):
-    ctypes.windll.user32.MessageBoxW(0, text, title, icon)
+#console
+def consoleadapter(cmd):
+    from files.consoledebug.debugconsole import clear_cmd, info_cmd, ipconfig_cmd, date_cmd, help_debug_cmd
+    from files.apicalling_func.pingapi_func import try_ping_number, send_request_ping, try_ping_ll, try_ping_btc, try_ping_ton, try_ping_ip, check_internet
+
+    cmd_buttonopen = None
+    try:
+        def cmd_buttonopen():
+            root.attributes("-fullscreen", False)
+            root.geometry("1280x720")
+            print(f"{Fore.BLUE}{Style.BRIGHT}[SYSTEM]{Style.NORMAL} {Fore.LIGHTGREEN_EX}cmd was enabled")
+
+    except Exception as error_console:
+        btn4.configure(text_color="#FF0000")
+        print(
+            f"{Fore.BLUE}{Style.BRIGHT}[SYSTEM]{Style.NORMAL} {Fore.LIGHTRED_EX}произошла ошибка при открытии 'console'\n{error_console}")
+
+    def try_ping_number_cmd():
+        print("wait..")
+        user_iput = "+79268471359"
+        phone = re.sub(r"\D", "", user_iput)
+
+        if check_internet():
+            a = try_ping_number(phone)
+            print(a)
+        else:
+            print(f"{Fore.RED}Отсутствует интернет-соединение!")
+
+    def try_ping_ip_cmd():
+        try_ping_ip()
+
+    def try_ping_ll_cmd():
+        try_ping_ll()
+
+    def try_ping_btc_cmd():
+        try_ping_btc()
+
+    def try_ping_ton_cmd():
+        try_ping_ton()
+
+    def help_cmd():
+        help_debug_cmd()
+
+    def clear_cmd11():
+        clear_cmd()
+
+    def info_cmd11():
+        info_cmd()
+
+    def ipconfig_cmd11():
+        ipconfig_cmd()
+
+    def date_cmd11():
+        date_cmd()
+
+    def reboot_cmd():
+        print(f"{Fore.BLUE}{Style.BRIGHT}[SYSTEM]{Style.NORMAL} {Fore.RED}restart GUI..")
+        path = r"hidlowgui_ctk.bat"
+        os.startfile(path)
+        time.sleep(2)
+        root.destroy()
+
+
+    def fgred_cmd():
+        Fore.BLUE = Fore.RED
+        Fore.LIGHTBLUE_EX = Fore.LIGHTRED_EX
+        Fore.CYAN = Fore.RED
+        Fore.LIGHTCYAN_EX = Fore.LIGHTRED_EX
+
+    def fgyellow_cmd():
+        Fore.BLUE = Fore.YELLOW
+        Fore.LIGHTBLUE_EX = Fore.YELLOW
+        Fore.CYAN = Fore.YELLOW
+        Fore.LIGHTCYAN_EX = Fore.YELLOW
+
+    def fggreen_cmd():
+        Fore.BLUE = Fore.GREEN
+        Fore.LIGHTBLUE_EX = Fore.LIGHTGREEN_EX
+        Fore.CYAN = Fore.GREEN
+        Fore.LIGHTCYAN_EX = Fore.LIGHTGREEN_EX
+
+    def fgpurple_cmd():
+        Fore.BLUE = Fore.MAGENTA
+        Fore.LIGHTBLUE_EX = Fore.LIGHTMAGENTA_EX
+        Fore.CYAN = Fore.MAGENTA
+        Fore.LIGHTCYAN_EX = Fore.LIGHTMAGENTA_EX
+
+    def fgwhite_cmd():
+        Fore.BLUE = Fore.WHITE
+        Fore.LIGHTBLUE_EX = Fore.LIGHTWHITE_EX
+        Fore.CYAN = Fore.WHITE
+        Fore.LIGHTCYAN_EX = Fore.LIGHTWHITE_EX
+
+
+    def fgdef_cmd():
+        Fore.BLUE = _orig_blue
+        Fore.LIGHTBLUE_EX = _orig_lightblue_ex
+        Fore.CYAN = _orig_cyan
+        Fore.LIGHTCYAN_EX = _orig_lightcyan_ex
 
 
 
-def main_notify():
-    notify_icons = {
-        "info": 0x40,
-        "warning": 0x30,
-        "error": 0x10,
-        "question": 0x20
+    commands = {
+        "clear": clear_cmd11,
+        "info": info_cmd11,
+        "myip": ipconfig_cmd11,
+        "help": help_cmd,
+        "time": date_cmd11,
+        "reboot": reboot_cmd,
+        "fgblue": fgdef_cmd,
+        "fgred": fgred_cmd,
+        "fgyellow": fgyellow_cmd,
+        "fggreen": fggreen_cmd,
+        "fgpurple": fgpurple_cmd,
+        "fgwhite": fgwhite_cmd,
+        "ping number": try_ping_number_cmd,
+        "ping ip": try_ping_ip_cmd,
+        "ping latlon": try_ping_ll_cmd,
+        "ping btc": try_ping_btc_cmd,
+        "ping ton": try_ping_ton_cmd,
+        "consoleopened": cmd_buttonopen
     }
 
-    parts = entry.get().split(maxsplit=2)
+    if not cmd:
+        pass
+    if cmd in commands:
+        commands[cmd]()
+    else:
+        print(f"{Fore.RED}неизвестная команда: {cmd}. список команд: [GUI] -> info -> about console")
 
-    if not parts:
-        output_label.configure(text_color="red", text="title, icon_type, text")
-        print(f"{Fore.BLUE}{Style.BRIGHT}[CTYPES]{Style.NORMAL} {Fore.YELLOW}No data has been entered")
-        output_label.pack(pady=5)
-        return
-    if len(parts) != 3:
-        output_label.configure(text_color="red", text="title, icon_type, text")
-        print(f"{Fore.BLUE}{Style.BRIGHT}[CTYPES]{Style.NORMAL} {Fore.YELLOW}Less than 3 data were entered")
-        output_label.pack(pady=5)
-        return
+#console potok
+def console_thread():
+    while not stop_flag:
+        try:
+            cmd = input("> ").strip().lower()
+            if cmd:
+                cmd_queue.put(cmd)
+            if cmd == "exit":
+                break
+        except EOFError:
+            break
+        except Exception:
+            print(Fore.RED + "console_thread наебнулась, hidlow eblan")
+            break
 
-    try:
 
-        title = parts[0]
-        icon_type = parts[1].lower()
-        text = parts[2]
-
-        icon_code = notify_icons.get(icon_type, 0x10)
-
-        print(f"{Fore.BLUE}{Style.BRIGHT}[CTYPES]{Style.NORMAL} {Fore.GREEN}Notification was shown")
-
-        threading.Thread(target=show_messagebox, args=(text, title, icon_code)).start()
-
-    except Exception as error_ctypes:
-        print(f"{Fore.BLUE}{Style.BRIGHT}[CTYPES]{Style.NORMAL} {Fore.RED}error ctype\n{error_ctypes}")
-#console
-def consoleadapter():
-    try:
-        print(f"{Fore.BLUE}{Style.BRIGHT}[CMD]{Style.NORMAL} {Fore.LIGHTGREEN_EX}cmd was opened")
-        script_dir = Path(__file__).parent / "files" / "consoledebug"
-        script_file = script_dir / "debugconsole.py"
-
-        subprocess.Popen(
-            ["cmd", "/k", sys.executable, str(script_file)],
-            cwd=str(script_dir),
-            creationflags=subprocess.CREATE_NEW_CONSOLE
-        )
-    except Exception as error_cmd:
-        btn4.configure(text_color="#FF0000")
-        print(f"{Fore.BLUE}{Style.BRIGHT}[CMD]{Style.NORMAL} {Fore.RED}произошла ошибка при открытии cmd\n{error_cmd}")
+def check_queue():
+    while not cmd_queue.empty():
+        cmd = cmd_queue.get()
+        consoleadapter(cmd)
+    if not stop_flag:
+        root.after(100, check_queue)
 
 
 # about
@@ -827,15 +868,12 @@ def about_project():
     API - маленький API сервер на Flask.
     доступные домены: /home, /home/ip=(запрос), home/phone=<запрос>
     /home/lat=<запрос1>&lon=<запрос2>\n
-    Notify - создает windows-уведомление: название окна, значок, текст
-    пример: [window] [error] [text in window]
-    доступные значки: info, warning, error, question\n
     \n
     background имеет 5 задних фонов: белый, черный, синий, красный, фиолетовый\n
     fullscreen меняет размер окна из полноэкранного режима в 1280x720\n
     console - с помощью нее вы можете работать с консолью. команды в 'about console'\n\n
-    Версия: BETA refactoring console\n
-    Всего строк: 1350\n"""
+    Версия: BETA fullscreen fg debug\n
+    Всего строк: 1555\n"""
 
     copyable.insert("1.0", text)
     copyable.bind("<Key>", lambda s: "break")
@@ -868,7 +906,7 @@ def consoleabout():
     time - актуальная дата и время\n
     reboot - перезапускает GUI\n
     fg[color] - меняет цвет тега на введенный в [color]
-    доступные цвета: red, blue, white.
+    доступные цвета: red, blue, green, yellow, purple, white.
     пример: fgred\n
     ping [func] - проверяет работоспособность API
     доступные функции: number, latlon, ip, btc, ton
@@ -884,6 +922,7 @@ def toggle_settings():
     else:
         settings_frame.pack(padx=1, pady=1)
 
+fullscreen = False
 def toggle_fullscreen():
     global fullscreen
     fullscreen = not fullscreen
@@ -911,20 +950,18 @@ def open_folder():
 
 
 def exitt():
+    global stop_flag
+    stop_flag = True
     print(f"{Fore.BLUE}{Style.BRIGHT}[SYSTEM]{Style.NORMAL} {Fore.RED}Выход из программы")
-    sys.exit()
     root.destroy()
-
 
 def menu_reboot():
     print(f"{Fore.BLUE}{Style.BRIGHT}[SYSTEM]{Style.NORMAL} {Fore.RED}restart GUI..")
-    script_path = os.path.abspath(__file__)
-    subprocess.Popen(
-        ["cmd", "/k", sys.executable, str(script_path)],
-        creationflags=subprocess.CREATE_NEW_CONSOLE
-    )
+    root.geometry("100x100")
+    time.sleep(1)
+    path = r"hidlowgui_ctk.bat"
+    os.startfile(path)
     time.sleep(2)
-    sys.exit()
     root.destroy()
 
 #это логика кнопок
@@ -961,16 +998,55 @@ def clear_entry_frame():
 # переменные фона
 # 1-black 2-white 3-blue 4-red 5-magenta
 btn2 = None
-exit_buttons = None
-bg_images = None
-reboot_buttons = None
+bg1 = None
+exitbuttonbg1 = None
+rebootbuttonbg1 = None
+
+
 
 try:
-    image_paths = [f"assets/bg_assets/bg{i}.jpg" for i in range(1, 6)]
-    bg = [Image.open(path).resize((1920, 1080)) for path in image_paths]
-    bg_images = [ctk.CTkImage(light_image=img, size=(1920, 1080)) for img in bg]
-    exit_buttons = [ctk.CTkImage(light_image=Image.open(f"assets/exit_assets/exitbutton{i}.png").resize((27, 27)), size=(27, 27))for i in range(1, 6)]
-    reboot_buttons = [ctk.CTkImage(light_image=Image.open(f"assets/reboot_assets/rebootbutton{i}.png").resize((25, 25)), size=(25, 25)) for i in range(1, 6)]
+    image1 = Image.open("assets/bg_assets/bg1.jpg").resize((1920, 1080))
+    image2 = Image.open("assets/bg_assets/bg2.jpg").resize((1920, 1080))
+    image3 = Image.open("assets/bg_assets/bg3.jpg").resize((1920, 1080))
+    image4 = Image.open("assets/bg_assets/bg4.jpg").resize((1920, 1080))
+    image5 = Image.open("assets/bg_assets/bg5.jpg").resize((1920, 1080))
+    image6 = Image.open("assets/bg_assets/bg6.jpg").resize((1920, 1080))
+
+    exitbuttonbg1 = Image.open("assets/exit_assets/exitbutton1.png").resize((27, 27))
+    exitbuttonbg2 = Image.open("assets/exit_assets/exitbutton2.png").resize((27, 27))
+    exitbuttonbg3 = Image.open("assets/exit_assets/exitbutton3.png").resize((27, 27))
+    exitbuttonbg4 = Image.open("assets/exit_assets/exitbutton4.png").resize((27, 27))
+    exitbuttonbg5 = Image.open("assets/exit_assets/exitbutton5.png").resize((27, 27))
+    exitbuttonbg6 = Image.open("assets/exit_assets/exitbutton6.png").resize((27, 27))
+
+    rebootbuttonbg1 = Image.open("assets/reboot_assets/rebootbutton1.png").resize((25, 25))
+    rebootbuttonbg2 = Image.open("assets/reboot_assets/rebootbutton2.png").resize((25, 25))
+    rebootbuttonbg3 = Image.open("assets/reboot_assets/rebootbutton3.png").resize((25, 25))
+    rebootbuttonbg4 = Image.open("assets/reboot_assets/rebootbutton4.png").resize((25, 25))
+    rebootbuttonbg5 = Image.open("assets/reboot_assets/rebootbutton5.png").resize((25, 25))
+    rebootbuttonbg6 = Image.open("assets/reboot_assets/rebootbutton6.png").resize((25, 25))
+
+
+    bg1 = ctk.CTkImage(light_image=image1, size=(1920, 1080))
+    bg2 = ctk.CTkImage(light_image=image2, size=(1920, 1080))
+    bg3 = ctk.CTkImage(light_image=image3, size=(1920, 1080))
+    bg4 = ctk.CTkImage(light_image=image4, size=(1920, 1080))
+    bg5 = ctk.CTkImage(light_image=image5, size=(1920, 1080))
+    bg6 = ctk.CTkImage(light_image=image6, size=(1920, 1080))
+
+    exitbuttonbg1 = ctk.CTkImage(light_image=exitbuttonbg1, size=(27, 27))
+    exitbuttonbg2 = ctk.CTkImage(light_image=exitbuttonbg2, size=(27, 27))
+    exitbuttonbg3 = ctk.CTkImage(light_image=exitbuttonbg3, size=(27, 27))
+    exitbuttonbg4 = ctk.CTkImage(light_image=exitbuttonbg4, size=(27, 27))
+    exitbuttonbg5 = ctk.CTkImage(light_image=exitbuttonbg5, size=(27, 27))
+    exitbuttonbg6 = ctk.CTkImage(light_image=exitbuttonbg6, size=(27, 27))
+
+    rebootbuttonbg1 = ctk.CTkImage(light_image=rebootbuttonbg1, size=(25, 25))
+    rebootbuttonbg2 = ctk.CTkImage(light_image=rebootbuttonbg2, size=(25, 25))
+    rebootbuttonbg3 = ctk.CTkImage(light_image=rebootbuttonbg3, size=(25, 25))
+    rebootbuttonbg4 = ctk.CTkImage(light_image=rebootbuttonbg4, size=(25, 25))
+    rebootbuttonbg5 = ctk.CTkImage(light_image=rebootbuttonbg5, size=(25, 25))
+    rebootbuttonbg6 = ctk.CTkImage(light_image=rebootbuttonbg6, size=(25, 25))
 
 except Exception as b:
     print(f"{Fore.BLUE}{Style.BRIGHT}[SYSTEM]{Style.NORMAL} {Fore.LIGHTRED_EX}Ошибка Background : {b}")
@@ -979,7 +1055,7 @@ except Exception as b:
 
 
 # label фон
-bg_label = ctk.CTkLabel(root, image=bg_images[0], text="")
+bg_label = ctk.CTkLabel(root, image=bg1, text="")
 bg_label.place(x=0, y=0, relwidth=1, relheight=1)
 
 
@@ -990,10 +1066,10 @@ def change_background():
     global fullscreen
 
     if bg_state == 1:
-        bg_label.configure(image=bg_images[1])
+        bg_label.configure(image=bg2)
 
-        exitadapter_button.configure(image=exit_buttons[1])
-        rebootbutton_button.configure(image=reboot_buttons[1])
+        exitadapter_button.configure(image=exitbuttonbg2)
+        rebootbutton_button.configure(image=rebootbuttonbg2)
 
         root.configure(fg_color="#D4CECE")
         menu_frame2.configure(fg_color="#D4D4D4")
@@ -1001,9 +1077,7 @@ def change_background():
         exitadapter_button.configure(fg_color="#D4D4D4", hover_color="#D4D4D4", border_color="#D4D4D4")
         rebootbutton_button.configure(fg_color="#D4D4D4", hover_color="#D4D4D4", border_color="#D4D4D4")
 
-
         print(f"{Fore.BLUE}{Style.BRIGHT}[SYSTEM]{Style.NORMAL} {Fore.LIGHTGREEN_EX}BackGround изменен на 'bg2.jpg'{Fore.RESET} | {Style.BRIGHT}WHITE")
-
 
         for frame in (menu_frame, entry_frame, about_frame, currency_frame, faker_frame, output_label):
             frame.configure(fg_color="#D4CECE")
@@ -1012,7 +1086,7 @@ def change_background():
                     if isinstance(widget, ctk.CTkButton):
                         widget.configure(
                             fg_color="#858585",
-                            hover_color="#6E6E6E",
+                            hover_color="#858585",
                         )
                         about_btn.configure(fg_color="#545454", hover_color="#444444")
                         settings_button.configure(fg_color="#545454", hover_color="#444444")
@@ -1036,11 +1110,11 @@ def change_background():
 
     elif bg_state == 2:
         # синий
-        bg_label.configure(image=bg_images[2])
-        bg_label.image = bg_images[2]
+        bg_label.configure(image=bg3)
+        bg_label.image = bg3
 
-        exitadapter_button.configure(image=exit_buttons[2])
-        rebootbutton_button.configure(image=reboot_buttons[2])
+        exitadapter_button.configure(image=exitbuttonbg3)
+        rebootbutton_button.configure(image=rebootbuttonbg3)
 
         root.configure(fg_color="#8FCCFA")
         exitadapter_button.configure(fg_color="#95D2F7", hover_color="#95D2F7", border_color="#95D2F7")
@@ -1090,11 +1164,11 @@ def change_background():
 
     elif bg_state == 3:
         # красный
-        bg_label.configure(image=bg_images[3])
-        bg_label.image = bg_images[3]
+        bg_label.configure(image=bg4)
+        bg_label.image = bg4
 
-        exitadapter_button.configure(image=exit_buttons[3])
-        rebootbutton_button.configure(image=reboot_buttons[3])
+        exitadapter_button.configure(image=exitbuttonbg4)
+        rebootbutton_button.configure(image=rebootbuttonbg4)
 
         root.configure(fg_color="#390100")
         exitadapter_button.configure(fg_color="#3E0202", hover_color="#3E0202", border_color="#3E0202")
@@ -1142,11 +1216,11 @@ def change_background():
 
     elif bg_state == 4:
         # фиолетовый
-        bg_label.configure(image=bg_images[4])
-        bg_label.image = bg_images[4]
+        bg_label.configure(image=bg5)
+        bg_label.image = bg5
 
-        exitadapter_button.configure(image=exit_buttons[4])
-        rebootbutton_button.configure(image=reboot_buttons[4])
+        exitadapter_button.configure(image=exitbuttonbg5)
+        rebootbutton_button.configure(image=rebootbuttonbg5)
 
         root.configure(fg_color="#2C0D6B")
         exitadapter_button.configure(fg_color="#300B74", hover_color="#300B73", border_color="#300B74")
@@ -1190,12 +1264,64 @@ def change_background():
 
         bg_state = 5
 
-    else:
-        bg_label.configure(image=bg_images[0])
-        bg_label.image = bg_images[0]
+    elif bg_state == 5:
+        # pink
+        bg_label.configure(image=bg6)
+        bg_label.image = bg6
 
-        exitadapter_button.configure(image=exit_buttons[0])
-        rebootbutton_button.configure(image=reboot_buttons[0])
+        exitadapter_button.configure(image=exitbuttonbg6)
+        rebootbutton_button.configure(image=rebootbuttonbg6)
+
+        root.configure(fg_color="#B67BB5")
+        exitadapter_button.configure(fg_color="#C084B8", hover_color="#C084B8", border_color="#C084B8")
+        rebootbutton_button.configure(fg_color="#C084B8", hover_color="#C084B8", border_color="#C084B8")
+
+        print(f"{Fore.BLUE}{Style.BRIGHT}[SYSTEM]{Style.NORMAL} {Fore.LIGHTGREEN_EX}BackGround изменен на 'bg6.jpg'{Fore.RESET} | {Style.BRIGHT}{Fore.LIGHTMAGENTA_EX}PINK")
+
+        settings_frame.configure(fg_color="#CB80B9")
+        menu_frame.configure(fg_color="#B67BB5")
+        menu_frame2.configure(fg_color="#C084B8")
+        entry_frame.configure(fg_color="#B67BB5")
+        about_frame.configure(fg_color="#D28ABC")
+        faker_frame.configure(fg_color="#D28ABC")
+        currency_frame.configure(fg_color="#D28ABC")
+        output_label.configure(fg_color="#B67BB5")
+
+
+        for frame in (menu_frame, entry_frame, about_frame, faker_frame, currency_frame, output_label):
+            for widget in frame.winfo_children():
+                try:
+                    if isinstance(widget, ctk.CTkButton):
+                        widget.configure(
+                            fg_color="#DF7CC3",
+                            text_color="white",
+                            hover_color="#D740B4",
+                        )
+                        about_btn.configure(fg_color="#EF43BE", hover_color="#B4098C")
+                        settings_button.configure(fg_color="#EF43BE", hover_color="#B4098C")
+                        btn1.configure(fg_color="#EF43BE", hover_color="#B4098C")
+                        btn2.configure(fg_color="#EF43BE", hover_color="#B4098C")
+                        btn3.configure(fg_color="#EF43BE", hover_color="#B4098C")
+                        btn4.configure(fg_color="#EF43BE", hover_color="#B4098C")
+
+                        confirm_button.configure(text_color="#00CF00")
+
+                        fakerback_button.configure(text_color="red")
+                        currencyback_button.configure(text_color="red")
+                        aboutback_button.configure(text_color="red")
+                        back_button.configure(text_color="red")
+
+                except Exception as a:
+                    print(f"{Fore.BLUE}{Style.BRIGHT}[SYSTEM]{Style.NORMAL} {Fore.LIGHTRED_EX}Ошибка background: {a}")
+
+        bg_state = 6
+
+    else:
+        bg_label.configure(image=bg1)
+        bg_label.image = bg1
+
+        exitadapter_button.configure(image=exitbuttonbg1)
+        rebootbutton_button.configure(image=rebootbuttonbg1)
 
         root.configure(fg_color="black")
         menu_frame2.configure(fg_color="black")
@@ -1287,10 +1413,6 @@ button8.pack(side="left", padx=5)
 button9 = ctk.CTkButton(menu_frame, text="API", fg_color="#262626", text_color="white", width=50, corner_radius=10,  hover_color="#444444", command=hidlowapi_cmd)
 button9.pack(side="left", padx=5)
 
-button10 = ctk.CTkButton(menu_frame, text="Notify", fg_color="#262626", text_color="white", width=50, corner_radius=10,  hover_color="#444444", command=select_notify)
-button10.pack(side="left", padx=5)
-
-
 about_btn = ctk.CTkButton(menu_frame2, text="Info", fg_color="#202020", text_color="white", hover_color="#444444", width=5, command=select_about)
 about_btn.pack(side="left", padx=5)
 
@@ -1307,14 +1429,13 @@ btn2.pack(pady=3)
 btn3 = ctk.CTkButton(settings_frame, text="folder", fg_color="#202020", text_color="white", hover_color="#444444", width=90, corner_radius=10, command=open_folder)
 btn3.pack(pady=3)
 
-btn4 = ctk.CTkButton(settings_frame, text="console", fg_color="#202020", text_color="white", hover_color="#444444", width=90, corner_radius=10, command=consoleadapter)
+btn4 = ctk.CTkButton(settings_frame, text="console", fg_color="#202020", text_color="white", hover_color="#444444", width=90, corner_radius=10, command=lambda: consoleadapter("consoleopened"))
 btn4.pack(pady=3)
 
-
-exitadapter_button = ctk.CTkButton(menu_frame2, text="", image=exit_buttons[0], fg_color="black", hover_color="black", corner_radius=0, border_width=2, border_color="black", width=10, command=exitt)
+exitadapter_button = ctk.CTkButton(menu_frame2, text="", image=exitbuttonbg1, fg_color="black", hover_color="black", corner_radius=0, border_width=2, border_color="black", width=10, command=exitt)
 exitadapter_button.pack(side="right", padx=5)
 
-rebootbutton_button = ctk.CTkButton(menu_frame2, text="", image=reboot_buttons[0], fg_color="black", hover_color="black", corner_radius=0, border_width=2, border_color="black", width=10, command=menu_reboot)
+rebootbutton_button = ctk.CTkButton(menu_frame2, text="", image=rebootbuttonbg1, fg_color="black", hover_color="black", corner_radius=0, border_width=2, border_color="black", width=10, command=menu_reboot)
 rebootbutton_button.pack(side="right", padx=5)
 
 # ввод
@@ -1357,4 +1478,8 @@ fakerback_button.pack(pady=1)
 
 
 output_label = ctk.CTkLabel(root, fg_color="black", text_color="#FF0000")
+
+threading.Thread(target=console_thread, daemon=True).start()
+root.after(100, check_queue)
+
 root.mainloop()

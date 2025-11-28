@@ -17,21 +17,21 @@ try:
     import sys
     import re
     import subprocess
+    import threading
+    import queue
     from faker import Faker
     import ctypes
     from pynput.keyboard import Controller, Key
     from flask import Flask, jsonify
-    from pathlib import Path
-    import threading
 
 except ModuleNotFoundError as e:
-    root = None
     print(f"Модуль {e.name} не найден.\nУстановите {e.name}")
-    ctypes.windll.user32.MessageBoxW(0, f"установите модуль {e.name}", "HidlowToolsGUI", 0x10)
-    sys.exit()
+
 
 root = ctk.CTk()
 init(autoreset=True)
+cmd_queue = queue.Queue()
+stop_flag = False
 fullscreen = False
 screen_width = root.winfo_screenwidth()
 screen_height = root.winfo_screenheight()
@@ -44,15 +44,9 @@ _orig_lightblue_ex = Fore.LIGHTBLUE_EX
 _orig_cyan = Fore.CYAN
 _orig_lightcyan_ex = Fore.LIGHTCYAN_EX
 
-print(f"{Style.BRIGHT}{Fore.BLUE}GitHub: https://github.com/hiikikomorii")
+print(f"{Style.BRIGHT}GitHub: https://github.com/hiikikomorii")
 
 print(f"{Fore.BLUE}{Style.BRIGHT}[SYSTEM]{Style.NORMAL} {Fore.LIGHTCYAN_EX}Дата & время запуска: {Style.BRIGHT}{data1}, {time1}")
-
-check_path_debug = Path(r"files\consoledebug\debugconsole.py")
-if check_path_debug.exists():
-    print(f"{Fore.BLUE}{Style.BRIGHT}[SYSTEM]{Style.NORMAL} {Fore.LIGHTGREEN_EX}CMD is available")
-else:
-    print(f"{Fore.BLUE}{Style.BRIGHT}[SYSTEM] {Fore.RED}CMD is not available\n" * 10)
 
 
 
@@ -225,9 +219,7 @@ def api_number():
 
     except Exception as er:
         output_label.configure(text=f"Ошибка API: {er}", text_color="red")
-        output_label.pack()
         print(f"{Fore.BLUE}{Style.BRIGHT}[NUMBER]{Style.NORMAL} {Fore.LIGHTRED_EX}Ошибка API: {er}")
-        button1.configure(text_color="#FF0000")
 
 
 
@@ -290,10 +282,8 @@ def api_ip():
         print(f"{Fore.BLUE}{Style.BRIGHT}[IP]{Style.NORMAL} {Fore.LIGHTGREEN_EX}Запрос выполнен: {user_input}")
 
     except Exception as er:
-        output_label.configure(text=f"Ошибка API-IP: {er}", text_color="red")
-        output_label.pack()
+        output_label.config(text=f"Ошибка API-IP: {er}", text_color="red")
         print(f"{Fore.BLUE}{Style.BRIGHT}[IP]{Style.NORMAL} {Fore.LIGHTRED_EX}Ошибка API-IP: {er}")
-        button2.configure(text_color="#FF0000")
 
 def api_lat():
     user_input = entry.get().strip()
@@ -310,7 +300,7 @@ def api_lat():
         parts = user_input.split()
 
         if len(parts) != 2:
-            output_label.configure(text="Введите два значения: широта и долгота через пробел", text_color="red")
+            output_label.config(text="Введите два значения: широта и долгота через пробел", text_color="red")
             output_label.pack(pady=5)
             print(f"{Fore.BLUE}{Style.BRIGHT}[LatLon]{Style.NORMAL} {Fore.LIGHTYELLOW_EX}Координаты были введены неправильно.")
             return
@@ -362,10 +352,8 @@ def api_lat():
         print(f"{Fore.BLUE}{Style.BRIGHT}[LatLon]{Style.NORMAL} {Fore.LIGHTGREEN_EX}Запрос был выполнен: {parts}")
 
     except Exception as er:
-        output_label.configure(text=f"Ошибка API-lat: {er}", text_color="red")
-        output_label.pack()
+        output_label.config(text=f"Ошибка API-lat: {er}", text_color="red")
         print(f"{Fore.BLUE}{Style.BRIGHT}[LatLon]{Style.NORMAL} {Fore.LIGHTRED_EX}Ошибка API-lat: {er}")
-        button3.configure(text_color="#FF0000")
 
 def qrcodee():
     user_input = entry.get().strip()
@@ -374,7 +362,7 @@ def qrcodee():
 
     output_label.pack_forget()
     if not user_input:
-        output_label.configure(text="Введите URL", text_color="red")
+        output_label.config(text="Введите URL", text_color="red")
         output_label.pack(pady=5)
         print(f"{Fore.BLUE}{Style.BRIGHT}[QR]{Style.NORMAL} {Fore.LIGHTYELLOW_EX}Url не был введен.")
         return
@@ -382,28 +370,21 @@ def qrcodee():
     try:
         img = qrcode.make(user_input)
         img.save("qrcode.png")
-        output_label.configure(text="QRcode сохранен", text_color="green")
+        output_label.config(text="QRcode сохранен", text_color="green")
         print(f"{Fore.BLUE}{Style.BRIGHT}[QR]{Style.NORMAL} {Fore.LIGHTGREEN_EX}QR код сгенерирован и сохранён как 'qrcodde.png'")
 
     except Exception as er:
-        output_label.configure(text="error. see log", text_color="red")
+        output_label.config(text="error. see log", text_color="red")
         output_label.pack(pady=5)
         print(f"{Fore.BLUE}{Style.BRIGHT}[QR]{Style.NORMAL} {Fore.LIGHTRED_EX}Ошибка функции qr: {er}")
-        button4.configure(text_color="#FF0000")
 
 def trol():
     try:
         print(f"{Fore.BLUE}{Style.BRIGHT}[TROLL]{Style.NORMAL} {Fore.LIGHTGREEN_EX}Troll was opened")
-        script_dir = Path(__file__).parent / "files" / "troll"
-        script_file = script_dir / "trollhidlowGUI.py"
-
-        subprocess.Popen(
-            ["cmd", "/k", sys.executable, str(script_file)],
-            cwd=str(script_dir),
-            creationflags=subprocess.CREATE_NEW_CONSOLE
-        )
+        path = r"files\troll\trollsetup.bat"
+        os.startfile(path)
     except Exception as error_troll:
-        button5.configure(text_color="#FF0000")
+        button5.config(text_color="#FF0000")
         print(f"{Fore.BLUE}{Style.BRIGHT}[TROLL]{Style.NORMAL} {Fore.RED}произошла ошибка при открытии 'troll'\n{error_troll}")
 
 
@@ -448,7 +429,6 @@ def select_ton():
 
     except Exception as error_ton:
         print(f"{Fore.BLUE}{Style.BRIGHT}[TON]{Style.NORMAL} {Fore.RED}TON ERROR\napi недоступно\n{error_ton}")
-        ton_button.configure(text_color="#FF0000")
 
 def select_btc():
     try:
@@ -491,7 +471,6 @@ def select_btc():
 
     except Exception as error_btc:
         print(f"{Fore.BLUE}{Style.BRIGHT}[BTC]{Style.NORMAL} {Fore.RED}BTC ERROR\napi недоступно\n{error_btc}")
-        btc_button.configure(text_color="#FF0000")
 
 def extract_chat(input_path, chat_name, output_path):
     with open(input_path, "r", encoding="utf-8") as f:
@@ -549,8 +528,7 @@ def gptchc():
         extract_chat(input_file, chat_input_name, output_file)
 
     except Exception as er:
-        output_label.configure(text="error. see log", text_color="red")
-        output_label.pack()
+        output_label.config(text="error. see log", text_color="red")
         print(f"{Fore.BLUE}{Style.BRIGHT}[GPTCHC]{Style.NORMAL} {Fore.LIGHTRED_EX}Ошибка функции GPTCHC: {er}")
 
 
@@ -558,16 +536,10 @@ def gptchc():
 def hidlowapi_cmd():
     try:
         print(f"{Fore.BLUE}{Style.BRIGHT}[API Server]{Style.NORMAL} {Fore.LIGHTGREEN_EX}Server was enabled")
-        script_dir = Path(__file__).parent / "files" / "apiserver"
-        script_file = script_dir / "hidlowAPI.py"
-
-        subprocess.Popen(
-            ["cmd", "/k", sys.executable, str(script_file)],
-            cwd=str(script_dir),
-            creationflags=subprocess.CREATE_NEW_CONSOLE
-        )
+        path = r"files\apiserver\setupserver.bat"
+        os.startfile(path)
     except Exception as error_hidlowapi:
-        button9.configure(text_color="#FF0000")
+        button9.config(text_color="#FF0000")
         print(f"{Fore.BLUE}{Style.BRIGHT}[API Server]{Style.NORMAL} {Fore.RED}произошла ошибка при запуске 'HidlowAPI'\n{error_hidlowapi}")
 
 #faker backend
@@ -712,7 +684,7 @@ def fakerjp():
         wrap="word"
     )
     copyable.pack(padx=20, pady=20)
-    print(f"{Fore.BLUE}{Style.BRIGHT}[FAKER: JP]{Style.NORMAL} {Fore.LIGHTGREEN_EX}fake information was shown")
+    print(f"{Fore.BLUE}{Style.BRIGHT}[FAKER: KZ]{Style.NORMAL} {Fore.LIGHTGREEN_EX}fake information was shown")
 
     fake = Faker('ja_JP')
 
@@ -781,20 +753,167 @@ def main_notify():
     except Exception as error_ctypes:
         print(f"{Fore.BLUE}{Style.BRIGHT}[CTYPES]{Style.NORMAL} {Fore.RED}error ctype\n{error_ctypes}")
 #console
-def consoleadapter():
-    try:
-        print(f"{Fore.BLUE}{Style.BRIGHT}[CMD]{Style.NORMAL} {Fore.LIGHTGREEN_EX}cmd was opened")
-        script_dir = Path(__file__).parent / "files" / "consoledebug"
-        script_file = script_dir / "debugconsole.py"
+def consoleadapter(cmd):
+    global fullscreen
+    from files.consoledebug.debugconsole import clear_cmd, info_cmd, ipconfig_cmd, date_cmd, help_debug_cmd
+    from files.apicalling_func.pingapi_func import try_ping_number, send_request_ping, try_ping_ll, try_ping_btc, try_ping_ton, try_ping_ip, check_internet
 
-        subprocess.Popen(
-            ["cmd", "/k", sys.executable, str(script_file)],
-            cwd=str(script_dir),
-            creationflags=subprocess.CREATE_NEW_CONSOLE
-        )
-    except Exception as error_cmd:
+    cmd_buttonopen = None
+
+    try:
+        def cmd_buttonopen():
+            global fullscreen
+            fullscreen = not fullscreen
+            root.attributes("-fullscreen", fullscreen)
+
+            if fullscreen:
+                root.attributes("-fullscreen", False)
+                root.geometry("1280x720")
+                btn1.configure(text_color="#CF0000")
+                print(f"{Fore.BLUE}{Style.BRIGHT}[CONSOLE]{Style.NORMAL} {Fore.LIGHTGREEN_EX}cmd was opened")
+            else:
+                pass
+
+    except Exception as error_console:
         btn4.configure(text_color="#FF0000")
-        print(f"{Fore.BLUE}{Style.BRIGHT}[CMD]{Style.NORMAL} {Fore.RED}произошла ошибка при открытии cmd\n{error_cmd}")
+        print(
+            f"{Fore.BLUE}{Style.BRIGHT}[SYSTEM]{Style.NORMAL} {Fore.LIGHTRED_EX}произошла ошибка при открытии 'console'\n{error_console}")
+
+    def try_ping_number_cmd():
+        print("wait..")
+        user_iput = "+79268471359"
+        phone = re.sub(r"\D", "", user_iput)
+
+        if check_internet():
+            a = try_ping_number(phone)
+            print(a)
+        else:
+            print(f"{Fore.RED}Отсутствует интернет-соединение!")
+
+    def try_ping_ip_cmd():
+        try_ping_ip()
+
+    def try_ping_ll_cmd():
+        try_ping_ll()
+
+    def try_ping_btc_cmd():
+        try_ping_btc()
+
+    def try_ping_ton_cmd():
+        try_ping_ton()
+
+    def help_cmd():
+        help_debug_cmd()
+
+    def clear_cmd11():
+        clear_cmd()
+
+    def info_cmd11():
+        info_cmd()
+
+    def ipconfig_cmd11():
+        ipconfig_cmd()
+
+    def date_cmd11():
+        date_cmd()
+
+    def reboot_cmd():
+        print(f"{Fore.BLUE}{Style.BRIGHT}[SYSTEM]{Style.NORMAL} {Fore.RED}restart GUI..")
+        path = r"hidlowgui_ctk.bat"
+        os.startfile(path)
+        time.sleep(2)
+        root.destroy()
+
+
+    def fgred_cmd():
+        Fore.BLUE = Fore.RED
+        Fore.LIGHTBLUE_EX = Fore.LIGHTRED_EX
+        Fore.CYAN = Fore.RED
+        Fore.LIGHTCYAN_EX = Fore.LIGHTRED_EX
+
+    def fgyellow_cmd():
+        Fore.BLUE = Fore.YELLOW
+        Fore.LIGHTBLUE_EX = Fore.YELLOW
+        Fore.CYAN = Fore.YELLOW
+        Fore.LIGHTCYAN_EX = Fore.YELLOW
+
+    def fggreen_cmd():
+        Fore.BLUE = Fore.GREEN
+        Fore.LIGHTBLUE_EX = Fore.LIGHTGREEN_EX
+        Fore.CYAN = Fore.GREEN
+        Fore.LIGHTCYAN_EX = Fore.LIGHTGREEN_EX
+
+    def fgpurple_cmd():
+        Fore.BLUE = Fore.MAGENTA
+        Fore.LIGHTBLUE_EX = Fore.LIGHTMAGENTA_EX
+        Fore.CYAN = Fore.MAGENTA
+        Fore.LIGHTCYAN_EX = Fore.LIGHTMAGENTA_EX
+
+    def fgwhite_cmd():
+        Fore.BLUE = Fore.WHITE
+        Fore.LIGHTBLUE_EX = Fore.LIGHTWHITE_EX
+        Fore.CYAN = Fore.WHITE
+        Fore.LIGHTCYAN_EX = Fore.LIGHTWHITE_EX
+
+
+    def fgdef_cmd():
+        Fore.BLUE = _orig_blue
+        Fore.LIGHTBLUE_EX = _orig_lightblue_ex
+        Fore.CYAN = _orig_cyan
+        Fore.LIGHTCYAN_EX = _orig_lightcyan_ex
+
+
+
+    commands = {
+        "clear": clear_cmd11,
+        "info": info_cmd11,
+        "myip": ipconfig_cmd11,
+        "help": help_cmd,
+        "time": date_cmd11,
+        "reboot": reboot_cmd,
+        "fgblue": fgdef_cmd,
+        "fgred": fgred_cmd,
+        "fgyellow": fgyellow_cmd,
+        "fggreen": fggreen_cmd,
+        "fgpurple": fgpurple_cmd,
+        "fgwhite": fgwhite_cmd,
+        "ping number": try_ping_number_cmd,
+        "ping ip": try_ping_ip_cmd,
+        "ping latlon": try_ping_ll_cmd,
+        "ping btc": try_ping_btc_cmd,
+        "ping ton": try_ping_ton_cmd,
+        "consoleopened": cmd_buttonopen
+    }
+
+    if not cmd:
+        pass
+    if cmd in commands:
+        commands[cmd]()
+    else:
+        print(f"{Fore.RED}неизвестная команда: {cmd}. список команд: [GUI] -> info -> about console")
+
+#console potok
+def console_thread():
+    while not stop_flag:
+        try:
+            cmd = input("> ").strip().lower()
+            if cmd:
+                cmd_queue.put(cmd)
+            if cmd == "exit":
+                break
+        except EOFError:
+            break
+        except Exception:
+            print(Fore.RED + "console_thread наебнулась, hidlow eblan")
+            break
+
+
+def check_queue():
+    while not cmd_queue.empty():
+        cmd = cmd_queue.get()
+        consoleadapter(cmd)
+    if not stop_flag:
+        root.after(100, check_queue)
 
 
 # about
@@ -834,8 +953,8 @@ def about_project():
     background имеет 5 задних фонов: белый, черный, синий, красный, фиолетовый\n
     fullscreen меняет размер окна из полноэкранного режима в 1280x720\n
     console - с помощью нее вы можете работать с консолью. команды в 'about console'\n\n
-    Версия: BETA refactoring console\n
-    Всего строк: 1350\n"""
+    Версия: BETA ctypes update\n
+    Всего строк: 1500\n"""
 
     copyable.insert("1.0", text)
     copyable.bind("<Key>", lambda s: "break")
@@ -868,7 +987,7 @@ def consoleabout():
     time - актуальная дата и время\n
     reboot - перезапускает GUI\n
     fg[color] - меняет цвет тега на введенный в [color]
-    доступные цвета: red, blue, white.
+    доступные цвета: red, blue, green, yellow, purple, white.
     пример: fgred\n
     ping [func] - проверяет работоспособность API
     доступные функции: number, latlon, ip, btc, ton
@@ -911,20 +1030,18 @@ def open_folder():
 
 
 def exitt():
+    global stop_flag
+    stop_flag = True
     print(f"{Fore.BLUE}{Style.BRIGHT}[SYSTEM]{Style.NORMAL} {Fore.RED}Выход из программы")
-    sys.exit()
     root.destroy()
-
 
 def menu_reboot():
     print(f"{Fore.BLUE}{Style.BRIGHT}[SYSTEM]{Style.NORMAL} {Fore.RED}restart GUI..")
-    script_path = os.path.abspath(__file__)
-    subprocess.Popen(
-        ["cmd", "/k", sys.executable, str(script_path)],
-        creationflags=subprocess.CREATE_NEW_CONSOLE
-    )
+    root.geometry("100x100")
+    time.sleep(1)
+    path = r"hidlowgui_ctk.bat"
+    os.startfile(path)
     time.sleep(2)
-    sys.exit()
     root.destroy()
 
 #это логика кнопок
@@ -964,6 +1081,8 @@ btn2 = None
 exit_buttons = None
 bg_images = None
 reboot_buttons = None
+
+
 
 try:
     image_paths = [f"assets/bg_assets/bg{i}.jpg" for i in range(1, 6)]
@@ -1307,7 +1426,7 @@ btn2.pack(pady=3)
 btn3 = ctk.CTkButton(settings_frame, text="folder", fg_color="#202020", text_color="white", hover_color="#444444", width=90, corner_radius=10, command=open_folder)
 btn3.pack(pady=3)
 
-btn4 = ctk.CTkButton(settings_frame, text="console", fg_color="#202020", text_color="white", hover_color="#444444", width=90, corner_radius=10, command=consoleadapter)
+btn4 = ctk.CTkButton(settings_frame, text="console", fg_color="#202020", text_color="white", hover_color="#444444", width=90, corner_radius=10, command=lambda: consoleadapter("consoleopened"))
 btn4.pack(pady=3)
 
 
@@ -1357,4 +1476,8 @@ fakerback_button.pack(pady=1)
 
 
 output_label = ctk.CTkLabel(root, fg_color="black", text_color="#FF0000")
+
+threading.Thread(target=console_thread, daemon=True).start()
+root.after(100, check_queue)
+
 root.mainloop()
