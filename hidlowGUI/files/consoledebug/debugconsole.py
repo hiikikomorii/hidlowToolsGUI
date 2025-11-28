@@ -1,4 +1,5 @@
 
+
 try:
     import sys
     from colorama import init, Fore, Style
@@ -16,10 +17,15 @@ try:
     import qrcode
     import re
     import time
-    from pingapi_func import try_ping_number, send_request_ping, try_ping_ll, try_ping_btc, try_ping_ton, try_ping_ip, check_internet
+    from pingapi_func import try_ping_number, send_request_ping, try_ping_ll, try_ping_btc, try_ping_ton, try_ping_ip, check_internet, onlypingarg
     import threading
+    import ctypes
 except ModuleNotFoundError as e:
     print(f"Модуль {e.name} не найден.\nУстановите {e.name}")
+    text_wdll = f"Модуль {e.name} не найден.\nУстановите {e.name}"
+
+    ctypes.windll.user32.MessageBoxW(0, text_wdll, "console", 0x10)
+    sys.exit()
 
 init(autoreset=False)
 
@@ -116,20 +122,18 @@ def date_cmd():
     print(f"{Fore.WHITE}date: {Fore.LIGHTWHITE_EX}{Style.BRIGHT}{data1}", end=" | ")
     print(f"{Fore.WHITE}time: {Fore.LIGHTWHITE_EX}{Style.BRIGHT}{time1}")
 
+
+def onlyfgarg():
+    print(Fore.LIGHTWHITE_EX + "fg red, blue, cyan, white")
 def fgred_cmd():
     Fore.WHITE = Fore.RED
     Fore.LIGHTWHITE_EX = Fore.LIGHTRED_EX
-
-
 def fgwhite_cmd():
     Fore.WHITE = _orig_white
     Fore.LIGHTWHITE_EX = _orig_white_ex
-
-
 def fgblue_cmd():
     Fore.WHITE = Fore.BLUE
     Fore.LIGHTWHITE_EX = Fore.LIGHTBLUE_EX
-
 def fgcyan_cmd():
     Fore.WHITE = Fore.CYAN
     Fore.LIGHTWHITE_EX = Fore.LIGHTCYAN_EX
@@ -156,15 +160,17 @@ def main():
         "help": help_cmd,
         "time": date_cmd,
         "reboot": reboot_cmd,
-        "fgblue": fgblue_cmd,
-        "fgcyan": fgcyan_cmd,
-        "fgred": fgred_cmd,
-        "fgwhite": fgwhite_cmd,
+        "fg blue": fgblue_cmd,
+        "fg cyan": fgcyan_cmd,
+        "fg red": fgred_cmd,
+        "fg white": fgwhite_cmd,
+        "fg": onlyfgarg,
         "ping number": try_ping_number_cmd,
         "ping ip": try_ping_ip,
         "ping latlon": try_ping_ll,
         "ping btc": try_ping_btc,
-        "ping ton": try_ping_ton
+        "ping ton": try_ping_ton,
+        "ping": onlypingarg
     }
 
 

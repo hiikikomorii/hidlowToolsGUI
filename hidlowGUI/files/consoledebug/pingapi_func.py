@@ -5,7 +5,6 @@ import requests
 import json, urllib.request
 import sys
 import random
-import qrcode
 import re
 import time
 
@@ -30,6 +29,9 @@ headers = {
     "Upgrade-Insecure-Requests": "1",
     "TE": "Trailers"
 }
+
+def onlypingarg():
+    print(f"{Fore.LIGHTWHITE_EX}number\nip\nlat/lon\nbtc\nton\n")
 
 def try_ping_ip():
 
