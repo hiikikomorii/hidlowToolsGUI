@@ -3,7 +3,7 @@
 ![bg_main_blue.png](assets/bg_main_blue.png)
 
 ***
-[Функции](#функции)  ||  [Boottraper](#boottraper) || [Console](#console) || [Доп.Функционал](#дополнительный-функционал-)
+[Функции](#функции)  ||  [Boottraper](#boottraper) || [Console](#console) || [Доп.Функционал](#дополнительный-функционал-) || [Установка](#установка)
 ***
 **Все персональные данные, показанные на скриншотах, являются вымышленными.**
 
@@ -130,6 +130,21 @@
 
 ![fscron.png](assets/fscron.png)
 ![fscroff.png](assets/fscroff.png)
+
+***
+
+### Установка
+
+**Для начала скачиваем сборку, открываем cmd (``win + r`` → ``cmd``)**
+
+**через команду ``cd`` указываем путь в нашу сборку**
+
+**вставляем эту команду: ``pip install -r requirements.txt``**
+
+**после чего запускаем ``boot traper``:
+``py boot_loader.py`` или python ``boot_loader.py``**  
+**P.S. ``Boot_loader`` нужен лишь когда вы впервые запускаете эту сборку, если boot loader запустил ``HidlowToolsGUI``
+``без ошибок``, то можете запускать HidlowToolsGUI ``напрямую``**
 
 
 
