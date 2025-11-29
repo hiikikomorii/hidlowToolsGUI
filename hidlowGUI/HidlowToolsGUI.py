@@ -25,7 +25,6 @@ try:
     import threading
 
 except ModuleNotFoundError as e:
-    root = None
     print(f"Модуль {e.name} не найден.\nУстановите {e.name}")
     ctypes.windll.user32.MessageBoxW(0, f"установите модуль {e.name}", "HidlowToolsGUI", 0x10)
     sys.exit()
@@ -834,8 +833,7 @@ def about_project():
     background имеет 5 задних фонов: белый, черный, синий, красный, фиолетовый\n
     fullscreen меняет размер окна из полноэкранного режима в 1280x720\n
     console - с помощью нее вы можете работать с консолью. команды в 'about console'\n\n
-    Версия: BETA refactoring console\n
-    Всего строк: 1350\n"""
+    Версия: BETA BSOD upd\n"""
 
     copyable.insert("1.0", text)
     copyable.bind("<Key>", lambda s: "break")
@@ -867,9 +865,9 @@ def consoleabout():
     help - список команд\n
     time - актуальная дата и время\n
     reboot - перезапускает GUI\n
-    fg[color] - меняет цвет тега на введенный в [color]
-    доступные цвета: red, blue, white.
-    пример: fgred\n
+    fg [color] - меняет цвет тега на введенный в [color]
+    доступные цвета: red, blue, cyan, white.
+    пример: fg red\n
     ping [func] - проверяет работоспособность API
     доступные функции: number, latlon, ip, btc, ton
     """
@@ -913,7 +911,6 @@ def open_folder():
 def exitt():
     print(f"{Fore.BLUE}{Style.BRIGHT}[SYSTEM]{Style.NORMAL} {Fore.RED}Выход из программы")
     sys.exit()
-    root.destroy()
 
 
 def menu_reboot():
