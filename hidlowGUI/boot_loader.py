@@ -1,4 +1,10 @@
 import tkinter as tk
+import subprocess
+import sys
+import threading
+import os
+import platform
+import time
 root = tk.Tk()
 
 try:
@@ -13,26 +19,15 @@ try:
     from faker import Faker
     import pynput
     from flask import Flask, jsonify
-    import os
-    import subprocess
-    import sys
 
     hidlow_path = "HidlowToolsGUI.py"
     subprocess.Popen(
         ["cmd", "/k", sys.executable, str(hidlow_path)],
         creationflags=subprocess.CREATE_NEW_CONSOLE
     )
+
     sys.exit()
-    root.destroy()
-
-
-
 except ModuleNotFoundError as e:
-    import subprocess
-    import sys
-    import threading
-    import os
-    import platform
 
     root.title("BOOT-LOADER-NOMODULE")
     root.attributes('-fullscreen', True)
@@ -78,7 +73,7 @@ Boottraped-GUI\n
         try:
             result = subprocess.run([sys.executable, "-m", "pip", "install", e.name], capture_output=True, text=True)
             if result.returncode == 0:
-                label_ru.config(text=f"pip {e.name} Установлено!", fg="green")
+                label_ru.config(text=f"pip {e.name} Установлено!", fg="#00CF00")
                 label_ru.pack(anchor="nw", pady=5)
                 label_eng.config(text=f"pip {e.name} it was established", fg="green")
                 label_eng.pack(anchor="nw", pady=5)
@@ -95,12 +90,18 @@ Boottraped-GUI\n
            print(error_pip_cmd)
 
     def upd_pip_cmd():
+        label_pipudp.config(text="wait...")
+        label_pipudp.pack(anchor="sw", pady=5, padx=20)
         try:
-            result = subprocess.run([sys.executable, "-m", "pip", "ins22tall", "--upgrade", "pip"], capture_output=True, text=True)
+            result = subprocess.run([sys.executable, "-m", "pip", "install", "--upgrade", "pip"], capture_output=True, text=True)
+            if result.returncode == 0:
+                out_msg = result.stdout
+                label_pipudp.config(text=f"pip successfully updated\n{out_msg}", fg="#00CF00")
+                label_pipudp.pack(anchor="sw", pady=5, padx=20)
             if result.returncode != 0:
                 error_msg = result.stderr
                 label_pipudp.config(text=f"pip upd error: {error_msg}", fg="red")
-                label_pipudp.pack(anchor="sw", pady=5)
+                label_pipudp.pack(anchor="sw", pady=5, padx=20)
 
         except Exception as error_updpip:
             print(error_updpip)
@@ -143,7 +144,7 @@ Boottraped-GUI\n
     btn_download = tk.Button(frame, text="Install", activebackground="#0010A7", bg="blue", fg="white", command=thread_install_pip_cmd, width=10)
     btn_download.pack(side="left", padx=5, pady=5)
 
-    btn_pip = tk.Button(frame, text="upgrade pip", activebackground="#0010A7", bg="blue", fg="white", command=upd_pip_cmd, width=10)
+    btn_pip = tk.Button(frame, text="upgrade pip", activebackground="#0010A7", bg="blue", fg="white", command=thread_upd_pip_cmd, width=10)
     btn_pip.pack(side="left", padx=5, pady=5)
 
     root.mainloop()
