@@ -63,7 +63,7 @@
 ***
 ### Boottraper
 
-![bsod_preview.png](assets/bsod_preview.png)
+![bsod_preview_v2.png](assets/bsod_preview_v2.png)
 
 **Он нужен для того, чтобы проверять установлены ли все модули или нет.**
 **При запуске проверяет все нужные для ``HidlowToolsGUI модули``. 
@@ -146,6 +146,7 @@
 ``py boot_loader.py`` или python ``boot_loader.py``**  
 **P.S. ``Boot_loader`` нужен лишь когда вы впервые запускаете эту сборку, если boot loader запустил ``HidlowToolsGUI``
 ``без ошибок``, то можете запускать HidlowToolsGUI ``напрямую``**
+
 
 
 
