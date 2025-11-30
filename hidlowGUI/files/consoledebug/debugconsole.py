@@ -42,10 +42,10 @@ help
 time
 exit
 reboot
-fgblue
-fgcyan
-fgred
-fgwhite
+fg blue
+fg cyan
+fg red
+fg white
 ping number
 ping ip
 ping latlon
