@@ -1,30 +1,33 @@
-
-
+import ctypes
+import sys
+import subprocess
 try:
-    import sys
     from colorama import init, Fore, Style
     import psutil, socket, platform
-    import os, subprocess
+    import os
     from datetime import date, datetime
     import requests
-    from colorama import init, Fore, Style
     from phonenumbers import carrier, geocoder, timezone, parse, is_valid_number
     import phonenumbers
     import requests
     import json, urllib.request
-    import sys
     import random
-    import qrcode
     import re
     import time
     from pingapi_func import try_ping_number, send_request_ping, try_ping_ll, try_ping_btc, try_ping_ton, try_ping_ip, check_internet, onlypingarg
     import threading
-    import ctypes
-except ModuleNotFoundError as e:
-    print(f"Модуль {e.name} не найден.\nУстановите {e.name}")
-    text_wdll = f"Модуль {e.name} не найден.\nУстановите {e.name}"
 
-    ctypes.windll.user32.MessageBoxW(0, text_wdll, "console", 0x10)
+except ModuleNotFoundError as e:
+    print(e)
+    if e.name == "pingapi_func":
+        ctypes.windll.user32.MessageBoxW(0, f"Сборка повреждена\nПапка {e.name} не найдена\nПроверьте совместимость сборки", "debug-console", 0x10)
+        sys.exit()
+
+    boot_path = "../../boot_loader.py"
+    subprocess.Popen(
+        ["cmd", "/c", sys.executable, str(boot_path)],
+        creationflags=subprocess.CREATE_NEW_CONSOLE
+    )
     sys.exit()
 
 init(autoreset=False)

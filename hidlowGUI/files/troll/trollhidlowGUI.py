@@ -1,14 +1,29 @@
-from pynput.keyboard import Controller, Key
-import time
-from colorama import init, Fore
+import subprocess
 import sys
+import ctypes
+try:
+    from pynput.keyboard import Controller, Key
+    import time
+    from colorama import init, Fore
+
+except ModuleNotFoundError as e:
+    boot_path = "../../boot_loader.py"
+    subprocess.Popen(
+        ["cmd", "/c", sys.executable, str(boot_path)],
+        creationflags=subprocess.CREATE_NEW_CONSOLE
+    )
+    sys.exit()
 
 init(autoreset=True)
 keyboard = Controller()
 
 def trooll():
-    with open("text.txt", "r", encoding="utf-8") as f:
-        words = f.read().splitlines()
+    try:
+        with open("text.txt", "r", encoding="utf-8") as f:
+            words = f.read().splitlines()
+    except Exception as error_txt:
+        ctypes.windll.user32.MessageBoxW(0, f"Сборка повреждена\ntxt не найден\n{error_txt}\nПроверьте совместимость сборки","troll", 0x10)
+        sys.exit()
 
     i = 0
 

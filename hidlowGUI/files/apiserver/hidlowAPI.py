@@ -1,14 +1,25 @@
-from flask import Flask, jsonify
-import requests
-import json, urllib.request
+import subprocess
 import sys
-import random
-import requests
-import time
-import re
-from colorama import init, Fore, Style, Back
-import phonenumbers
-from phonenumbers import carrier, geocoder, timezone, parse, is_valid_number
+try:
+    from flask import Flask, jsonify
+    import requests
+    import json, urllib.request
+    import sys
+    import random
+    import requests
+    import time
+    import re
+    from colorama import init, Fore, Style, Back
+    import phonenumbers
+    from phonenumbers import carrier, geocoder, timezone, parse, is_valid_number
+
+except ModuleNotFoundError as e:
+    boot_path = "../../boot_loader.py"
+    subprocess.Popen(
+        ["cmd", "/c", sys.executable, str(boot_path)],
+        creationflags=subprocess.CREATE_NEW_CONSOLE
+    )
+    sys.exit()
 
 app = Flask(__name__)
 
