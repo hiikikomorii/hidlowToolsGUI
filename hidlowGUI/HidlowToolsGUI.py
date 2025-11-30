@@ -1,3 +1,6 @@
+import subprocess
+import sys
+
 try:
     import os
     import customtkinter as ctk
@@ -14,20 +17,28 @@ try:
     from phonenumbers import carrier, geocoder, timezone, parse, is_valid_number
     import phonenumbers
     import urllib.request
-    import sys
     import re
-    import subprocess
     from faker import Faker
     import ctypes
     from pynput.keyboard import Controller, Key
     from flask import Flask, jsonify
     from pathlib import Path
     import threading
+    from files.consoledebug.pingapi_func import try_ping_number, send_request_ping, try_ping_ll, try_ping_btc, try_ping_ton, try_ping_ip, check_internet, onlypingarg
+
 
 except ModuleNotFoundError as e:
-    print(f"Модуль {e.name} не найден.\nУстановите {e.name}")
-    ctypes.windll.user32.MessageBoxW(0, f"установите модуль {e.name}", "HidlowToolsGUI", 0x10)
+    if e.name == "files.consoledebug.pingapi_func":
+        ctypes.windll.user32.MessageBoxW(0, f"Сборка повреждена\nпуть {e.name} не найден\nПроверьте совместимость сборки", "debug-console", 0x10)
+        sys.exit()
+
+    boot_path = "boot_loader.py"
+    subprocess.Popen(
+        ["cmd", "/c", sys.executable, str(boot_path)],
+        creationflags=subprocess.CREATE_NEW_CONSOLE
+    )
     sys.exit()
+
 
 root = ctk.CTk()
 init(autoreset=True)
@@ -393,14 +404,19 @@ def qrcodee():
 def trol():
     try:
         print(f"{Fore.BLUE}{Style.BRIGHT}[TROLL]{Style.NORMAL} {Fore.LIGHTGREEN_EX}Troll was opened")
-        script_dir = Path(__file__).parent / "files" / "troll"
-        script_file = script_dir / "trollhidlowGUI.py"
+        try:
+            script_dir = Path(__file__).parent / "files" / "troll"
+            script_file = script_dir / "trollhidlowGUI.py"
 
-        subprocess.Popen(
-            ["cmd", "/k", sys.executable, str(script_file)],
-            cwd=str(script_dir),
-            creationflags=subprocess.CREATE_NEW_CONSOLE
-        )
+            subprocess.Popen(
+                ["cmd", "/c", sys.executable, str(script_file)],
+                cwd=str(script_dir),
+                creationflags=subprocess.CREATE_NEW_CONSOLE
+            )
+        except Exception as error_troll_cmd:
+            ctypes.windll.user32.MessageBoxW(0, f"Ошибка открытия Troll\n{error_troll_cmd}\nПроверьте совместимость сборки", "HidlowToolsGUI", 0x10)
+            sys.exit()
+
     except Exception as error_troll:
         button5.configure(text_color="#FF0000")
         print(f"{Fore.BLUE}{Style.BRIGHT}[TROLL]{Style.NORMAL} {Fore.RED}произошла ошибка при открытии 'troll'\n{error_troll}")
@@ -557,14 +573,19 @@ def gptchc():
 def hidlowapi_cmd():
     try:
         print(f"{Fore.BLUE}{Style.BRIGHT}[API Server]{Style.NORMAL} {Fore.LIGHTGREEN_EX}Server was enabled")
-        script_dir = Path(__file__).parent / "files" / "apiserver"
-        script_file = script_dir / "hidlowAPI.py"
+        try:
+            script_dir = Path(__file__).parent / "files" / "apiserver"
+            script_file = script_dir / "hidlowAPI.py"
 
-        subprocess.Popen(
-            ["cmd", "/k", sys.executable, str(script_file)],
-            cwd=str(script_dir),
-            creationflags=subprocess.CREATE_NEW_CONSOLE
-        )
+            subprocess.Popen(
+                ["cmd", "/c", sys.executable, str(script_file)],
+                cwd=str(script_dir),
+                creationflags=subprocess.CREATE_NEW_CONSOLE
+            )
+        except Exception as error_api_cmd:
+            ctypes.windll.user32.MessageBoxW(0, f"Ошибка запуска API\n{error_api_cmd}\nПроверьте совместимость сборки","HidlowToolsGUI", 0x10)
+            sys.exit()
+
     except Exception as error_hidlowapi:
         button9.configure(text_color="#FF0000")
         print(f"{Fore.BLUE}{Style.BRIGHT}[API Server]{Style.NORMAL} {Fore.RED}произошла ошибка при запуске 'HidlowAPI'\n{error_hidlowapi}")

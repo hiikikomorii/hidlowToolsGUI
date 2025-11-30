@@ -4,7 +4,7 @@ import sys
 import threading
 import os
 import platform
-import time
+import ctypes
 root = tk.Tk()
 
 try:
@@ -19,15 +19,20 @@ try:
     from faker import Faker
     import pynput
     from flask import Flask, jsonify
+    from files.consoledebug.pingapi_func import try_ping_number, send_request_ping, try_ping_ll, try_ping_btc, try_ping_ton, try_ping_ip, check_internet, onlypingarg
+
 
     hidlow_path = "HidlowToolsGUI.py"
     subprocess.Popen(
-        ["cmd", "/k", sys.executable, str(hidlow_path)],
+        ["cmd", "/c", sys.executable, str(hidlow_path)],
         creationflags=subprocess.CREATE_NEW_CONSOLE
     )
 
     sys.exit()
 except ModuleNotFoundError as e:
+    if e.name == "files.consoledebug.pingapi_func":
+        ctypes.windll.user32.MessageBoxW(0, f"Сборка повреждена\nпуть {e.name} не найден\nПроверьте совместимость сборки", "debug-console", 0x10)
+        sys.exit()
 
     root.title("BOOT-LOADER-NOMODULE")
     root.attributes('-fullscreen', True)
@@ -54,7 +59,7 @@ Boottraped-GUI\n
     def reboot_bsod():
         script_path = os.path.abspath(__file__)
         subprocess.Popen(
-            ["cmd", "/k", sys.executable, str(script_path)],
+            ["cmd", "/c", sys.executable, str(script_path)],
             creationflags=subprocess.CREATE_NEW_CONSOLE
         )
         sys.exit()
